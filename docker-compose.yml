@@ -1,0 +1,32 @@
+version: '3.4'
+
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    command:
+      # Docker configuration
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=traefik-public"
+      # Configure entrypoint
+      - "--entrypoints.web.address=:80"
+      # Enable dashboard
+      - "--api.dashboard=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.example.com`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.service=api@internal"
+    networks:
+      - traefik-public
+
+networks:
+  traefik-public:
+    external: true
